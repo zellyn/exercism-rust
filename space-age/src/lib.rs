@@ -14,12 +14,15 @@ impl From<u64> for Duration {
 }
 
 pub trait Planet {
-    fn years_during(d: &Duration) -> f64;
+    const ORBITAL_PERIOD: f64;
+    fn years_during(d: &Duration) -> f64 {
+        d.years / Self::ORBITAL_PERIOD
+    }
 }
 
 duplicate_inline! {
     [
-        planet  conversion;
+        planet  period;
         [ Mercury ] [ 0.2408467 ];
         [ Venus ]   [ 0.61519726 ];
         [ Earth ]   [ 1.0 ];
@@ -33,8 +36,6 @@ duplicate_inline! {
     pub struct planet;
 
     impl Planet for planet {
-        fn years_during(d: &Duration) -> f64 {
-            d.years / conversion
-        }
+        const ORBITAL_PERIOD: f64 = period;
     }
 }
