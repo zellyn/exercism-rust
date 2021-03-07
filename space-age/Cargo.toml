@@ -1,0 +1,7 @@
+[dependencies]
+duplicate = "0.2.9"
+
+[package]
+edition = "2018"
+name = "space-age"
+version = "1.2.0"
