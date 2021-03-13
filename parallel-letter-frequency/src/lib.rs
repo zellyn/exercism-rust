@@ -2,11 +2,15 @@ use std::collections::HashMap;
 use std::sync::mpsc;
 use std::thread;
 
+fn normalize(s: &str) -> String {
+    s.to_lowercase().chars().filter(|c| c.is_alphabetic()).collect()
+}
+
 pub fn frequency(input: &[&str], worker_count: usize) -> HashMap<char, usize> {
     // Multiple publishers, single consumer means we can have one channel for the results…
     let (result_tx, result_rx) = mpsc::channel();
     // …but need one input channel per worker.
-    let mut channels: Vec<mpsc::Sender<&str>> = Vec::with_capacity(worker_count);
+    let mut channels: Vec<mpsc::Sender<String>> = Vec::with_capacity(worker_count);
 
     // Spin up workers
     for _ in 0..worker_count {
@@ -34,17 +38,17 @@ pub fn frequency(input: &[&str], worker_count: usize) -> HashMap<char, usize> {
     //         channels[i].send(s).unwrap()
     //     })
     // }
-    for (i, &s) in input.into_iter().enumerate() {
-        channels[i % worker_count].send(s).unwrap();
+    for (i, &s) in input.iter().enumerate() {
+        channels[i % worker_count].send(normalize(s)).unwrap();
     }
 
     // Close all input channels
     drop(channels);
 
+    // Merge the results
     result_rx.iter().take(worker_count).fold(HashMap::new(), |mut ha, hb| {
         for (ch, count) in hb {
-            let counter = ha.entry(ch).or_insert(0);
-            *counter += count;
+            *ha.entry(ch).or_insert(0) += count;
         }
         ha
     })
